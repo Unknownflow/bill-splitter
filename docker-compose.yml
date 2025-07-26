@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  portfolio:
+    build: .
+    image: portfolio # sets image name to portfolio
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node-modules
+    environment:
+      NODE_ENV: production
