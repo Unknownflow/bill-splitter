@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import theme from './theme'
 import NavBar from './components/NavBar'
 import Footer from './components/Footer'
-import Expenses from './components/Expenses'
-import Home from './components/Home'
+import Expenses from './pages/Expenses'
+import Home from './pages/Home'
 
 function App() {
   return (
