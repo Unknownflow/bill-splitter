@@ -1,19 +1,29 @@
 import { Box, ThemeProvider } from '@mui/material'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import theme from './theme'
 import NavBar from './components/NavBar'
 import Footer from './components/Footer'
+import Expenses from './components/Expenses'
+import Home from './components/Home'
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <Box display='flex' flexDirection='column' minHeight='100vh'>
-        <NavBar />
+      <Router>
+        <Box display='flex' flexDirection='column' minHeight='100vh'>
+          <NavBar />
 
-        {/* Main content */}
-        <Box component='main' flexGrow={1} p={2}></Box>
+          {/* Main content */}
+          <Box component='main' flexGrow={1} p={2}>
+            <Routes>
+              <Route path='/' element={<Home />} />
+              <Route path='/expenses' element={<Expenses />} />
+            </Routes>
+          </Box>
 
-        <Footer />
-      </Box>
+          <Footer />
+        </Box>
+      </Router>
     </ThemeProvider>
   )
 }

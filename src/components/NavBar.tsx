@@ -1,6 +1,10 @@
 import { AppBar, Box, Button, Container, Toolbar, Typography } from '@mui/material'
+import { Link } from 'react-router-dom'
 
-const pages = ['Home', 'Expenses']
+const pages = [
+  { title: 'Home', path: '/' },
+  { title: 'Expenses', path: '/expenses' }
+]
 
 function NavBar() {
   return (
@@ -11,7 +15,7 @@ function NavBar() {
             variant='h6'
             noWrap
             component='a'
-            href='#home'
+            href='/'
             sx={{
               mr: 2,
               display: { xs: 'none', md: 'flex' },
@@ -25,8 +29,8 @@ function NavBar() {
 
           <Box sx={{ flexGrow: 1, display: 'flex' }}>
             {pages.map((page) => (
-              <Button key={page} sx={{ my: 2, color: 'white', display: 'block' }}>
-                {page}
+              <Button key={page.title} component={Link} to={page.path} sx={{ my: 2, color: 'white', display: 'block' }}>
+                {page.title}
               </Button>
             ))}
           </Box>
