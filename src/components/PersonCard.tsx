@@ -1,12 +1,18 @@
-import { Card, CardContent, TextField, Typography, Button, Box, List, ListItem, ListItemText, IconButton } from '@mui/material'
+import { Box, Button, Card, CardContent, IconButton, List, ListItem, ListItemText, TextField, Typography } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
-import { useState, type ChangeEvent } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
+import type { Bill, Person } from '../types/Person'
 
-function PersonCard() {
-  const [name, setName] = useState<string>('')
+type Props = {
+  person: Person
+  onChange: (updatedPerson: Person) => void
+}
+
+function PersonCard({ person, onChange }: Props) {
+  const [name, setName] = useState<string>(person.name || '')
   const [billAmt, setBillAmt] = useState<number>(1)
   const [billDesc, setBillDesc] = useState<string>('')
-  const [bills, setBills] = useState<{ amount: number; desc: string }[]>([])
+  const [bills, setBills] = useState<Bill[]>(person.bills || [])
 
   const [billDescHelperText, setBillDescHelperText] = useState<string>('')
   const [billAmtHelperText, setBillAmtHelperText] = useState<string>('')
@@ -14,24 +20,38 @@ function PersonCard() {
   const [billDescError, setBillDescError] = useState<boolean>(false)
   const [billAmtError, setBillAmtError] = useState<boolean>(false)
 
+  useEffect(() => {
+    onChange({
+      id: person.id,
+      name,
+      bills
+    })
+  }, [bills, name])
+
   const handleAddBill = () => {
-    if (billDesc.length === 0) {
+    let valid = true
+
+    if (billDesc.trim().length === 0) {
       setBillDescError(true)
       setBillDescHelperText('Please enter a bill description.')
+      valid = false
     }
 
     if (isNaN(billAmt) || billAmt <= 0) {
       setBillAmtError(true)
       setBillAmtHelperText('Please enter a valid number greater or equals to 1.')
+      valid = false
     }
 
-    if (!isNaN(billAmt) && billAmt > 0 && billDesc.trim()) {
-      setBills([...bills, { amount: billAmt, desc: billDesc.trim() }])
-      setBillAmt(1)
-      setBillDesc('')
-      setBillAmtError(false)
-      setBillAmtHelperText('')
-    }
+    if (!valid) return
+
+    setBills([...bills, { amount: billAmt, desc: billDesc.trim() }])
+    setBillAmt(1)
+    setBillDesc('')
+    setBillAmtError(false)
+    setBillAmtHelperText('')
+    setBillDescError(false)
+    setBillDescHelperText('')
   }
 
   const handleDeleteBill = (indexToDelete: number) => {
@@ -40,8 +60,7 @@ function PersonCard() {
 
   const handleBillDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => {
     setBillDesc(e.target.value)
-
-    if (billDesc.length > 0) {
+    if (e.target.value.trim().length > 0) {
       setBillDescError(false)
       setBillDescHelperText('')
     }
@@ -50,7 +69,6 @@ function PersonCard() {
   const handleBillAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value)
     setBillAmt(value)
-
     if (value > 0) {
       setBillAmtError(false)
       setBillAmtHelperText('')
@@ -61,7 +79,7 @@ function PersonCard() {
     <Card sx={{ m: 2 }}>
       <CardContent>
         <Typography variant='h6' gutterBottom>
-          Person Info
+          Person {person.id + 1}
         </Typography>
         <TextField fullWidth label='Name' value={name} onChange={(e) => setName(e.target.value)} margin='normal' />
 

@@ -1,12 +1,13 @@
 import { Box, Button, Container, TextField, Typography } from '@mui/material'
-import { useState, type ChangeEvent } from 'react'
+import { useCallback, useState, type ChangeEvent } from 'react'
 import PersonCard from '../components/PersonCard'
+import type { Person } from '../types/Person'
 
 function Expenses() {
   const [numPeople, setNumPeople] = useState<number>(1)
   const [error, setError] = useState<boolean>(false)
   const [helperText, setHelperText] = useState<string>('')
-  const [people, setPeople] = useState<number[]>([])
+  const [people, setPeople] = useState<Person[]>([])
 
   const handleSubmit = () => {
     if (!numPeople || isNaN(numPeople) || numPeople <= 0) {
@@ -15,7 +16,13 @@ function Expenses() {
     } else {
       setError(false)
       setHelperText('')
-      setPeople(Array.from({ length: numPeople }, (_, i) => i))
+      setPeople(
+        Array.from({ length: numPeople }, (_, i) => ({
+          id: i,
+          name: '',
+          bills: []
+        }))
+      )
     }
   }
 
@@ -29,11 +36,15 @@ function Expenses() {
     }
   }
 
+  const handlePersonChange = useCallback((updatedPerson: Person) => {
+    setPeople((prevPeople) => prevPeople.map((p) => (p.id === updatedPerson.id ? updatedPerson : p)))
+  }, [])
+
   return (
     <Container maxWidth='md'>
       <Box my={2}>
         <Typography variant='h3' component='h1' gutterBottom>
-          Split expenses
+          Split Expenses
         </Typography>
 
         <Box display='flex' alignItems='center' justifyContent='center' gap={4}>
@@ -61,8 +72,8 @@ function Expenses() {
         </Box>
       </Box>
 
-      {people.map((id) => (
-        <PersonCard key={id} />
+      {people.map((person) => (
+        <PersonCard key={person.id} person={person} onChange={handlePersonChange} />
       ))}
     </Container>
   )
