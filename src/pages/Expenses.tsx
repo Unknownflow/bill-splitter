@@ -8,7 +8,7 @@ const style = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 400,
+  width: '50%',
   bgcolor: 'background.paper',
   border: '2px solid #000',
   boxShadow: 24,
@@ -143,9 +143,15 @@ function Expenses() {
 
           <Modal open={modalOpen} onClose={handleModalClose} aria-labelledby='modal-modal-title' aria-describedby='modal-modal-description'>
             <Box sx={style}>
-              <Typography id='modal-modal-title' variant='h6' component='h2'>
-                Amount to transfer
-              </Typography>
+              <Box display='flex' flexDirection='row' justifyContent='space-between'>
+                <Typography id='modal-modal-title' variant='h6' component='h2'>
+                  Transfer Summary
+                </Typography>
+                <Button variant='outlined' color='secondary' size='small' onClick={handleModalClose} style={{ marginBottom: '16px' }}>
+                  X
+                </Button>
+              </Box>
+
               {transferDetails.length === 0 ? (
                 <Typography>No transfers needed. Everyone paid equally.</Typography>
               ) : (
