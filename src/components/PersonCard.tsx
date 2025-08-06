@@ -10,6 +10,8 @@ type Props = {
 
 function PersonCard({ person, onChange }: Props) {
   const [name, setName] = useState<string>(person.name || '')
+  const [totalPaid, setTotalPaid] = useState<number>(0)
+
   const [billAmt, setBillAmt] = useState<number>(1)
   const [billDesc, setBillDesc] = useState<string>('')
   const [bills, setBills] = useState<Bill[]>(person.bills || [])
@@ -24,7 +26,8 @@ function PersonCard({ person, onChange }: Props) {
     onChange({
       id: person.id,
       name,
-      bills
+      bills,
+      totalPaid
     })
   }, [bills, name])
 
@@ -45,16 +48,21 @@ function PersonCard({ person, onChange }: Props) {
 
     if (!valid) return
 
+    setTotalPaid(totalPaid + billAmt)
+
     setBills([...bills, { amount: billAmt, desc: billDesc.trim() }])
     setBillAmt(1)
     setBillDesc('')
-    setBillAmtError(false)
+
     setBillAmtHelperText('')
-    setBillDescError(false)
     setBillDescHelperText('')
+
+    setBillAmtError(false)
+    setBillDescError(false)
   }
 
   const handleDeleteBill = (indexToDelete: number) => {
+    setTotalPaid(totalPaid - bills[indexToDelete].amount)
     setBills((prevBills) => prevBills.filter((_, index) => index !== indexToDelete))
   }
 
