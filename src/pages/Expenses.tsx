@@ -36,7 +36,19 @@ function Expenses() {
     } else {
       setError(false)
       setHelperText('')
-      setPeople([...people, { id: people.length, name: '', bills: [], totalPaid: 0 }])
+
+      // Only add people if needed
+      if (people.length < numPeople) {
+        const newPeople = [...people]
+        const diff = numPeople - people.length
+        for (let i = 0; i < diff; i++) {
+          newPeople.push({ id: newPeople.length, name: '', bills: [], totalPaid: 0 })
+        }
+        setPeople(newPeople)
+      } else {
+        // If we have more people than needed, trim the array
+        setPeople((prevPeople) => prevPeople.slice(0, numPeople))
+      }
     }
   }
 
