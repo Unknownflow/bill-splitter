@@ -1,5 +1,5 @@
 services:
-  portfolio:
+  bill-splitter:
     build: .
     image: bill-splitter
     ports:
