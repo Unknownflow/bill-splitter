@@ -5,10 +5,11 @@ import type { Bill, Person } from '../types/Person'
 
 type Props = {
   person: Person
+  people: Person[]
   onChange: (updatedPerson: Person) => void
 }
 
-function PersonCard({ person, onChange }: Props) {
+function PersonCard({ person, people, onChange }: Props) {
   const [name, setName] = useState<string>(person.name || '')
   const [totalPaid, setTotalPaid] = useState<number>(0)
 
@@ -22,6 +23,8 @@ function PersonCard({ person, onChange }: Props) {
   const [billDescError, setBillDescError] = useState<boolean>(false)
   const [billAmtError, setBillAmtError] = useState<boolean>(false)
 
+  const [selectedPeople, setSelectedPeople] = useState<number[]>([])
+
   useEffect(() => {
     onChange({
       id: person.id,
@@ -30,6 +33,10 @@ function PersonCard({ person, onChange }: Props) {
       totalPaid
     })
   }, [bills, name])
+
+  useEffect(() => {
+    setSelectedPeople(people.map((p) => p.id))
+  }, [people])
 
   const handleAddBill = () => {
     let valid = true
@@ -46,11 +53,17 @@ function PersonCard({ person, onChange }: Props) {
       valid = false
     }
 
+    if (selectedPeople.length === 0) {
+      setBillDescError(true)
+      setBillDescHelperText('Please select at least one person to pay the bill.')
+      valid = false
+    }
+
     if (!valid) return
 
     setTotalPaid(totalPaid + billAmt)
 
-    setBills([...bills, { amount: billAmt, desc: billDesc.trim() }])
+    setBills([...bills, { amount: billAmt, desc: billDesc.trim(), payers: selectedPeople }])
     setBillAmt(1)
     setBillDesc('')
 
@@ -81,6 +94,15 @@ function PersonCard({ person, onChange }: Props) {
       setBillAmtError(false)
       setBillAmtHelperText('')
     }
+  }
+
+  const handleTogglePerson = (id: number) => {
+    setSelectedPeople((prevSelected) => (prevSelected.includes(id) ? prevSelected.filter((personId) => personId !== id) : [...prevSelected, id]))
+  }
+
+  const handleToggleSelectAll = () => {
+    const allSelected = selectedPeople.length === people.length
+    setSelectedPeople(allSelected ? [] : people.map((p) => p.id))
   }
 
   return (
@@ -122,6 +144,38 @@ function PersonCard({ person, onChange }: Props) {
             }}
             sx={{ width: 150 }}
           />
+        </Box>
+
+        {/* New row for people buttons */}
+        <Box display='flex' gap={1} mt={2} flexWrap='wrap'>
+          {people.length > 0 &&
+            people.map((person, index) => {
+              const isSelected = selectedPeople.includes(person.id)
+              return (
+                <Button
+                  key={index}
+                  variant='contained'
+                  onClick={() => handleTogglePerson(person.id)}
+                  sx={{
+                    backgroundColor: isSelected ? 'primary' : 'white',
+                    color: isSelected ? 'white' : 'black',
+                    border: '1px solid green',
+                    '&:hover': {
+                      backgroundColor: isSelected ? 'green' : '#f0f0f0'
+                    }
+                  }}
+                >
+                  {person.name || `Person ${index + 1}`}
+                </Button>
+              )
+            })}
+        </Box>
+
+        <Box display='flex' justifyContent='flex-start' gap={2} mt={2}>
+          <Button variant='outlined' onClick={handleToggleSelectAll}>
+            {selectedPeople.length === people.length ? 'Deselect All' : 'Select All'}
+          </Button>
+
           <Button variant='contained' onClick={handleAddBill}>
             Add
           </Button>
@@ -139,7 +193,14 @@ function PersonCard({ person, onChange }: Props) {
                 }
                 disableGutters
               >
-                <ListItemText primary={`${bill.desc}: $${bill.amount.toFixed(2)}`} />
+                <ListItemText
+                  primary={`${bill.desc}: $${bill.amount.toFixed(2)}, Paid by: ${bill.payers
+                    .map((id) => {
+                      const p = people.find((person) => person.id === id)
+                      return p?.name || `Person ${id + 1}`
+                    })
+                    .join(', ')}`}
+                />
               </ListItem>
             ))}
           </List>

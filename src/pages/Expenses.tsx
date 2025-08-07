@@ -14,6 +14,7 @@ const style = {
   boxShadow: 24,
   p: 4
 }
+const maxPeople = 25
 
 function Expenses() {
   const [numPeople, setNumPeople] = useState<number>(1)
@@ -30,9 +31,9 @@ function Expenses() {
   const handleModalClose = () => setModalOpen(false)
 
   const handleSubmit = () => {
-    if (!numPeople || isNaN(numPeople) || numPeople <= 0) {
+    if (!numPeople || isNaN(numPeople) || numPeople <= 0 || numPeople > maxPeople) {
       setError(true)
-      setHelperText('Please enter a valid number greater or equals to 1.')
+      setHelperText(`Please enter a valid number greater or equals to 1 and less than or equals to ${maxPeople}.`)
     } else {
       setError(false)
       setHelperText('')
@@ -67,42 +68,42 @@ function Expenses() {
   }, [])
 
   const calculateTransfers = () => {
-    const numPeople = people.length
-    const totalSpent = people.reduce((sum, p) => sum + p.totalPaid, 0)
-    const average = totalSpent / numPeople
+    const transfersTable = Array.from({ length: people.length }, () => Array(people.length).fill(0))
 
-    const balances = people.map((p) => ({
-      name: p.name,
-      id: p.id,
-      balance: Math.round((p.totalPaid - average) * 100) / 100
-    }))
+    // Step 1: Go through all bills
+    people.forEach((person) => {
+      person.bills.forEach((bill) => {
+        const { amount, payers } = bill
 
-    const creditors = balances.filter((b) => b.balance > 0).sort((a, b) => b.balance - a.balance)
-    const debtors = balances.filter((b) => b.balance < 0).sort((a, b) => a.balance - b.balance)
+        if (!payers || payers.length === 0) return // Skip
+
+        const share = amount / payers.length
+
+        // Subtract share from each payer (they owe)
+        payers.forEach((payerId) => {
+          if (payerId === person.id) return // Skip if the payer is the one who paid the bill
+
+          if (payerId < person.id) {
+            transfersTable[payerId][person.id] += share
+          } else {
+            transfersTable[person.id][payerId] -= share
+          }
+        })
+      })
+    })
 
     const transfers: Transfer[] = []
 
-    let i = 0
-    let j = 0
-
-    while (i < debtors.length && j < creditors.length) {
-      const debtor = debtors[i]
-      const creditor = creditors[j]
-
-      const amount = Math.min(-debtor.balance, creditor.balance)
-      transfers.push({
-        from: debtor.name,
-        fromId: debtor.id,
-        to: creditor.name,
-        toId: creditor.id,
-        amount: Math.round(amount * 100) / 100
-      })
-
-      debtor.balance += amount
-      creditor.balance -= amount
-
-      if (Math.abs(debtor.balance) < 0.01) i++
-      if (Math.abs(creditor.balance) < 0.01) j++
+    // Round balances and add to transfers
+    for (let i = 0; i < transfersTable.length; i++) {
+      for (let j = 0; j < transfersTable[i].length; j++) {
+        transfersTable[i][j] = Math.round(transfersTable[i][j] * 100) / 100
+        if (transfersTable[i][j] > 0) {
+          transfers.push({ fromId: i, from: people[i].name, toId: j, to: people[j].name, amount: transfersTable[i][j] })
+        } else if (transfersTable[i][j] < 0) {
+          transfers.push({ fromId: j, from: people[j].name, toId: i, to: people[i].name, amount: -transfersTable[i][j] })
+        }
+      }
     }
 
     setTransferDetails(transfers)
@@ -129,10 +130,12 @@ function Expenses() {
             slotProps={{
               input: {
                 inputProps: {
-                  min: 1
+                  min: 1,
+                  max: maxPeople
                 }
               }
             }}
+            sx={{ width: 150 }}
           />
           <Button variant='contained' color='primary' size='medium' onClick={handleSubmit}>
             Submit
@@ -157,7 +160,8 @@ function Expenses() {
               ) : (
                 transferDetails.map((transfer, index) => (
                   <Typography key={index}>
-                    Person {transfer.fromId + 1} ({transfer.from}) → Person {transfer.toId + 1} ({transfer.to}): ${transfer.amount.toFixed(2)}
+                    Person {transfer.fromId + 1} {transfer.from && `(${transfer.from})`} → Person {transfer.toId + 1}{' '}
+                    {transfer.to && `(${transfer.to})`}: ${transfer.amount.toFixed(2)}
                   </Typography>
                 ))
               )}
@@ -167,7 +171,7 @@ function Expenses() {
       </Box>
 
       {people.map((person) => (
-        <PersonCard key={person.id} person={person} onChange={handlePersonChange} />
+        <PersonCard key={person.id} person={person} onChange={handlePersonChange} people={people} />
       ))}
     </Container>
   )

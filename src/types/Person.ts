@@ -1,6 +1,7 @@
 export type Bill = {
   amount: number
   desc: string
+  payers: number[]
 }
 
 export type Person = {
